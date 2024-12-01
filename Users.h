@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 #include <string>
-#include "Users.h"
+#include <msclr/marshal_cppstd.h>
 using namespace std;
 
 class Users
@@ -13,24 +13,16 @@ public:
 	string email;
 	string password;
 
-public:
-
-	void users(const int& id, const string& fName, const string& lName,
-		const string& mail, const string& pwd) {
-
+	Users(int id, System::String^ fName, System::String^ lName, System::String^ mail, System::String^ pwd) {
 		user_id = id;
-		fname = fName;
-		lname = lName;
-		email = mail;
-		password = mail;
-	};
+		fname = msclr::interop::marshal_as<std::string>(fName);
+		lname = msclr::interop::marshal_as<std::string>(lName);
+		email = msclr::interop::marshal_as<std::string>(mail);
+		password = msclr::interop::marshal_as<std::string>(pwd);
+	}
 
-
+	// Methods
+public:
 	void login();
 	void logout();
-
-
-
-
 };
-

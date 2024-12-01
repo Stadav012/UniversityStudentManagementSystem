@@ -2,6 +2,11 @@
 #include "Student.h";
 #include "Admin.h";
 #include "Faculty.h";
+#include <iostream>
+#include <string>
+#include <ctime> // Include for std::tm
+#include <msclr/marshal_cppstd.h>
+#include <msclr/marshal.h>
 
 using namespace MySql::Data::MySqlClient;
 
@@ -236,7 +241,8 @@ private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e
 
 				try {
 					role = sqlRd["role"]->ToString();
-					MessageBox::Show("Role successful!");
+					// welcome the user with the name and role 
+					MessageBox::Show("Welcome " + sqlRd["username"]->ToString() + " (" + role + ")");
 				}
 				catch (Exception^ ex) {
 					// Display the exception message to help with debugging
@@ -253,8 +259,77 @@ private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e
 					adminForm->Show();
 				}
 				else if (role == "faculty") {
-					Faculty^ facultyForm = gcnew Faculty();
-					facultyForm->Show();
+					try {
+						// Extract user information
+						int id = Convert::ToInt32(sqlRd["user_id"]);
+						std::string fname = msclr::interop::marshal_as<std::string>(sqlRd["fname"]->ToString());
+						std::string lname = msclr::interop::marshal_as<std::string>(sqlRd["lname"]->ToString());
+						std::string email = msclr::interop::marshal_as<std::string>(sqlRd["email"]->ToString());
+						std::string password = msclr::interop::marshal_as<std::string>(sqlRd["password"]->ToString());
+
+						// Close the current reader
+						sqlRd->Close();
+
+						// Prepare query to fetch faculty information
+						sqlCd->CommandText = R"(
+            SELECT 
+                faculty.faculty_id, 
+                faculty.appointmentDate, 
+                departments.departmentName, 
+                courses.courseName 
+            FROM faculty 
+            JOIN departments ON faculty.department_id = departments.department_id 
+            LEFT JOIN courses ON faculty.faculty_id = courses.faculty_id 
+            WHERE faculty.user_id = @user_id
+        )";
+						sqlCd->Parameters->Clear();
+						sqlCd->Parameters->AddWithValue("@user_id", id);
+
+						sqlRd = sqlCd->ExecuteReader();
+
+						// Initialize variables
+						int faculty_id = 0;
+						std::string appointmentDate, department;
+						std::vector<std::string> courses;
+
+						// Read data
+						if (sqlRd->HasRows) {
+							while (sqlRd->Read()) {
+								if (faculty_id == 0) { // Set static fields from the first row
+									faculty_id = Convert::ToInt32(sqlRd["faculty_id"]);
+									appointmentDate = msclr::interop::marshal_as<std::string>(sqlRd["appointmentDate"]->ToString());
+									department = msclr::interop::marshal_as<std::string>(sqlRd["departmentName"]->ToString());
+								}
+								// Append course names
+                                if (!Convert::IsDBNull(sqlRd["courseName"])) {
+                                    courses.push_back(msclr::interop::marshal_as<std::string>(sqlRd["courseName"]->ToString()));
+                                }
+									
+							}
+						}
+						else {
+							MessageBox::Show("No faculty data found for the provided user.");
+							return;
+						}
+
+						// Close the reader
+						sqlRd->Close();
+
+						// Create and show the faculty form
+						Faculty^ facultyForm = gcnew Faculty(id, fname, lname, email, password, faculty_id, appointmentDate, department, courses);
+						facultyForm->Show();
+					}
+					catch (Exception^ ex) {
+						// Handle any exceptions
+						MessageBox::Show("Error: " + ex->Message);
+					}
+					finally {
+						// Ensure the reader is closed
+						if (sqlRd != nullptr && !sqlRd->IsClosed) {
+							sqlRd->Close();
+						}
+						sqlCd->Parameters->Clear();
+					}
 				}
 				this->Hide();
 			
