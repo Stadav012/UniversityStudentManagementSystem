@@ -374,6 +374,9 @@ namespace UniversityStudentManagementSystem {
 				titleLabel->Text = "Edit Student";
 				actionButton->Text = "Edit";
 				actionButton->Tag = "EditStudent";
+
+				// Attach the click event handler for editing
+				/*actionButton->Click += gcnew EventHandler(this, &Admin1::OnEditStudentClick);*/
 			}
 			catch (Exception^ ex) {
 				MessageBox::Show("Error loading student data: " + ex->Message, "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
@@ -589,6 +592,15 @@ namespace UniversityStudentManagementSystem {
 				actionButton->Tag = "DeleteFaculty";
 
 				// Attach the click event handler for deletion
+
+				// remove other event listeners
+				actionButton->Click -= gcnew EventHandler(this, &Admin1::OnEditCourseClick);
+				actionButton->Click -= gcnew EventHandler(this, &Admin1::OnDeleteCourseClick);
+				actionButton->Click -= gcnew EventHandler(this, &Admin1::OnDeleteStudentClick);
+				actionButton->Click -= gcnew EventHandler(this, &Admin1::OnEditFacultyClick);
+
+
+
 				actionButton->Click += gcnew EventHandler(this, &Admin1::OnDeleteFacultyClick);
 			}
 			catch (Exception^ ex) {
@@ -629,7 +641,12 @@ namespace UniversityStudentManagementSystem {
 				actionButton->Tag = "EditFaculty";
 
 				// Attach the click event handler for editing
-				//actionButton->Click -= gcnew EventHandler(this, &Admin1::OnAddFacultyClick); // Remove any other handlers
+
+				// remove other event listeners
+				actionButton->Click -= gcnew EventHandler(this, &Admin1::OnEditCourseClick);
+				actionButton->Click -= gcnew EventHandler(this, &Admin1::OnDeleteCourseClick);
+				actionButton->Click -= gcnew EventHandler(this, &Admin1::OnDeleteStudentClick);
+
 				actionButton->Click += gcnew EventHandler(this, &Admin1::OnEditFacultyClick); // Attach edit handler
 			}
 			catch (Exception^ ex) {
@@ -1083,6 +1100,15 @@ namespace UniversityStudentManagementSystem {
 				actionButton->Tag = "DeleteCourse";
 
 				// Attach the click event handler for deletion
+
+				// remove other event listeners
+				actionButton->Click -= gcnew EventHandler(this, &Admin1::OnEditCourseClick);
+				actionButton->Click -= gcnew EventHandler(this, &Admin1::OnDeleteFacultyClick);
+				actionButton->Click -= gcnew EventHandler(this, &Admin1::OnDeleteStudentClick);
+				actionButton->Click -= gcnew EventHandler(this, &Admin1::OnEditFacultyClick);
+
+
+
 				actionButton->Click += gcnew EventHandler(this, &Admin1::OnDeleteCourseClick);
 			}
 			catch (Exception^ ex) {
@@ -1123,7 +1149,14 @@ namespace UniversityStudentManagementSystem {
 				actionButton->Tag = "EditCourse";
 
 				// Attach event handler for the Action button
-				//actionButton->Click -= gcnew EventHandler(this, &Admin1::OnAddCourseClick); // Remove other handlers if any
+
+				// remove other event handlers
+				actionButton->Click -= gcnew EventHandler(this, &Admin1::OnEditFacultyClick); 
+				actionButton->Click -= gcnew EventHandler(this, &Admin1::OnDeleteFacultyClick);
+				actionButton->Click -= gcnew EventHandler(this, &Admin1::OnDeleteStudentClick);
+				actionButton->Click -= gcnew EventHandler(this, &Admin1::OnEditFacultyClick);
+				
+
 				actionButton->Click += gcnew EventHandler(this, &Admin1::OnEditCourseClick); // Attach edit handler
 			}
 			catch (Exception^ ex) {
