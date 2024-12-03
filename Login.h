@@ -1,6 +1,6 @@
 #pragma once
 #include "Student.h";
-#include "Admin.h";
+#include "Admin1.h";
 #include "Faculty.h";
 #include <iostream>
 #include <string>
@@ -255,8 +255,63 @@ private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e
 					studentForm->Show();
 				}
 				else if (role == "admin") {
-					Admin^ adminForm = gcnew Admin();
-					adminForm->Show();
+
+					
+					try {
+
+						// close prev reader
+						sqlRd->Close();
+
+						// get the admin fname and id from the database by joining user table and admin table on user_id
+						sqlCd->CommandText = R"(
+								SELECT 
+									admin.name, 		 
+									admin.admin_id 
+								FROM users 
+								JOIN admin ON users.user_id = admin.user_id 
+								WHERE users.username = @username
+							)";
+
+						sqlCd->Parameters->Clear();
+						sqlCd->Parameters->AddWithValue("@username", textBox1->Text);
+
+						sqlRd = sqlCd->ExecuteReader();
+
+						// initialize the Admin form
+						std::string name = "";
+						int admin_id = 0;
+
+						// Read data from the sql reader as it just returns one row
+						if (sqlRd->HasRows) {
+							while (sqlRd->Read()) {
+								name = msclr::interop::marshal_as<std::string>(sqlRd["name"]->ToString());
+								admin_id = Convert::ToInt32(sqlRd["admin_id"]);
+							}
+						}
+						else {
+							MessageBox::Show("No admin data found for the provided user.");
+							return;
+						}
+
+						// Close the reader
+						sqlRd->Close();
+
+						// Create and show the admin form
+                        Admin1^ adminForm = gcnew Admin1(admin_id, msclr::interop::marshal_as<System::String^>(name));
+						adminForm->Show();
+
+					}
+					catch (Exception^ ex) {
+						// Display the exception message to help with debugging
+						MessageBox::Show("Error: " + ex->Message);
+					}
+					finally {
+						// Ensure the reader is closed
+						if (sqlRd != nullptr && !sqlRd->IsClosed) {
+							sqlRd->Close();
+						}
+						sqlCd->Parameters->Clear();
+					}
 				}
 				else if (role == "faculty") {
 					try {

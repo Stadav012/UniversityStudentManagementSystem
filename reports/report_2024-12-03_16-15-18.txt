@@ -1,0 +1,12 @@
+University Report
+
+----------------------------
+
+Total Students: 3
+
+Total Faculty: 4
+
+Total Courses: 2
+
+Total Departments: 4
+

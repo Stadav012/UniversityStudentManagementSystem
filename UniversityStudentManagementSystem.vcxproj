@@ -124,6 +124,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Admin.cpp" />
+    <ClCompile Include="Admin1.cpp" />
     <ClCompile Include="Faculty.cpp" />
     <ClCompile Include="Login.cpp" />
     <ClCompile Include="Student.cpp" />
@@ -133,6 +134,10 @@
     <ClInclude Include="Admin.h">
       <FileType>CppForm</FileType>
     </ClInclude>
+    <ClInclude Include="Admin1.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="DatabaseHelper.h" />
     <ClInclude Include="Faculty.h">
       <FileType>CppForm</FileType>
     </ClInclude>
@@ -147,6 +152,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Admin.resx">
       <DependentUpon>Admin.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Admin1.resx">
+      <DependentUpon>Admin1.h</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Faculty.resx">
       <DependentUpon>Faculty.h</DependentUpon>
