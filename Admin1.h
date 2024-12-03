@@ -102,7 +102,7 @@ namespace UniversityStudentManagementSystem {
 			});
 			this->menuStrip1->Location = System::Drawing::Point(0, 0);
 			this->menuStrip1->Name = L"menuStrip1";
-			this->menuStrip1->Size = System::Drawing::Size(643, 24);
+			this->menuStrip1->Size = System::Drawing::Size(794, 24);
 			this->menuStrip1->TabIndex = 0;
 			// 
 			// manageStudents
@@ -207,6 +207,7 @@ namespace UniversityStudentManagementSystem {
 			// 
 			this->viewFinancialsToolStripMenuItem->Name = L"viewFinancialsToolStripMenuItem";
 			this->viewFinancialsToolStripMenuItem->Size = System::Drawing::Size(32, 19);
+			this->viewFinancialsToolStripMenuItem->Text = L"View Financials";
 			// 
 			// button1
 			// 
@@ -229,7 +230,7 @@ namespace UniversityStudentManagementSystem {
 			// 
 			// Admin1
 			// 
-			this->ClientSize = System::Drawing::Size(643, 261);
+			this->ClientSize = System::Drawing::Size(794, 261);
 			this->Controls->Add(this->Close);
 			this->Controls->Add(this->menuStrip1);
 			this->Controls->Add(this->button1);
@@ -245,24 +246,87 @@ namespace UniversityStudentManagementSystem {
 
 		}
 
-		void InitializeDynamicComponents() {
-			this->titleLabel = gcnew Label();
-			this->titleLabel->Location = Point(20, 50);
-			this->titleLabel->Size = System::Drawing::Size(300, 30);
-			this->titleLabel->Text = L"Welcome to Admin Panel";
-			this->Controls->Add(this->titleLabel);
+        void InitializeDynamicComponents() {
+            this->titleLabel = gcnew Label();
+            this->titleLabel->Location = Point(20, 50);
+            this->titleLabel->Size = System::Drawing::Size(300, 30);
+            this->titleLabel->Text = L"Welcome to Admin Panel";
+            this->Controls->Add(this->titleLabel);
 
-			this->gridView = gcnew DataGridView();
-			this->gridView->Location = Point(20, 100);
-			this->gridView->Size = System::Drawing::Size(760, 300);
-			this->Controls->Add(this->gridView);
+            this->gridView = gcnew DataGridView();
+            this->gridView->Location = Point(20, 100);
+            this->gridView->Size = System::Drawing::Size(760, 300);
+            this->Controls->Add(this->gridView);
 
-			this->actionButton = gcnew Button();
-			this->actionButton->Location = Point(600, 420);
-			this->actionButton->Size = System::Drawing::Size(100, 30);
-			this->actionButton->Text = L"Action";
-			this->Controls->Add(this->actionButton);
-		}
+            this->actionButton = gcnew Button();
+            this->actionButton->Location = Point(600, 420);
+            this->actionButton->Size = System::Drawing::Size(100, 30);
+            this->actionButton->Text = L"Action";
+            this->Controls->Add(this->actionButton);
+
+            // button to generate transcript for a student
+            this->button1 = gcnew Button();
+            this->button1->Location = Point(600, 500);
+            this->button1->Size = System::Drawing::Size(200, 23);
+            this->button1->Text = L"Generate Student Transcript";
+            this->button1->Click += gcnew System::EventHandler(this, &Admin1::GenerateStudentTranscript);
+            
+            // Add the button to the form
+            this->Controls->Add(this->button1);
+        }
+
+        void GenerateStudentTranscript(System::Object^ sender, System::EventArgs^ e) {
+        // take the student id of the selected student in the grid view
+        if (gridView->SelectedRows->Count == 0) {
+        MessageBox::Show("Please select a student to generate a transcript for.", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+        return;
+        }
+
+        DataGridViewRow^ selectedRow = gridView->SelectedRows[0];
+        int studentId = Convert::ToInt32(selectedRow->Cells["student_id"]->Value);
+
+        DatabaseHelper^ db = gcnew DatabaseHelper();
+        String^ query = "SELECT * FROM Students INNER JOIN Users on Students.user_id = Users.user_id WHERE student_id = " + studentId;
+        DataTable^ studentData = db->GetData(query);
+
+        if (studentData->Rows->Count == 0) {
+        MessageBox::Show("Student not found.", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+        return;
+        }
+
+        // combine the student table with the submissions table and the assignments table and then write all the data to a file in a transcript format and save it to the desktop
+        // the transcript should include the student's name, the course name, the assignment name, the assignment grade, the assignment Total score
+        String^ transcriptQuery = "SELECT Users.fname, Users.lname, Courses.courseName, Assignments.Title, Submissions.grade,Submissions.Total_Points FROM Submissions INNER JOIN Assignments ON Submissions.assignment_id = Assignments.AssignmentID INNER JOIN Courses ON Assignments.course_id = Courses.course_id INNER JOIN Students ON Submissions.student_id = Students.student_id INNER JOIN Users ON Students.user_id = Users.user_id WHERE Students.student_id = " + studentId;
+
+        DataTable^ transcriptData = db->GetData(transcriptQuery);
+
+        if (transcriptData->Rows->Count == 0) {
+        MessageBox::Show("No transcript data found for the selected student.", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+        return;
+        }
+
+        // Create the transcript file
+        String^ transcriptPath = Environment::GetFolderPath(Environment::SpecialFolder::Desktop) + "\\transcript_" + studentId + ".txt";
+        StreamWriter^ writer = gcnew StreamWriter(transcriptPath);
+
+        // Write the transcript data to the file
+        writer->WriteLine("Student Transcript\n");
+        writer->WriteLine("Name: " + studentData->Rows[0]->default["fname"]->ToString() + " " + studentData->Rows[0]->default["lname"]->ToString());
+        writer->WriteLine("Student ID: " + studentId + "\n");
+        writer->WriteLine("Course\t\tAssignment\t\tGrade\t\tTotal Score\n");
+
+        for each (DataRow ^ row in transcriptData->Rows) {
+        writer->WriteLine(row["courseName"] + "\t\t" + row["Title"] + "\t\t" + row["grade"] + "\t\t" + row["Total_Points"]);
+        }
+
+        writer->Close();
+
+		// open the transcript file
+		System::Diagnostics::Process::Start(transcriptPath);
+
+        // Notify the user
+        MessageBox::Show("Transcript generated successfully! Saved to: " + transcriptPath, "Success", MessageBoxButtons::OK, MessageBoxIcon::Information);
+        }
 
 		// Student Management Event Handlers
 		void deleteStudentToolStripMenuItem_Click(System::Object^ sender, System::EventArgs^ e) {
@@ -1390,6 +1454,9 @@ namespace UniversityStudentManagementSystem {
 		void LoadStudentData() {
 			DatabaseHelper^ db = gcnew DatabaseHelper();
 			gridView->DataSource = db->GetData("SELECT student_id, major, fname, lname, email, DOB, picture FROM Students INNER JOIN Users ON Students.user_id = users.user_id");
+
+			// show the generate transcript button
+            button1->Visible = true;
 		}
 
 		void LoadFacultyData() {
